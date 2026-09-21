@@ -1,0 +1,1 @@
+{"id":"toy-eval-1","group_id":"synthetic-b","task":"extract","question":"What is the profit?","context":"Revenue: 19 USD; profit: 4 USD.","candidates":[{"id":"revenue","text":"19 USD","value":19},{"id":"profit","text":"4 USD","value":4},{"id":"none","text":"Not present","is_null":true}],"target":"profit"}

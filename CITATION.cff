@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Please cite this software repository; no published paper is currently claimed."
+type: software
+title: "Vision-JEV: Efficient Multimodal Question Answering through Structured Extraction and Decisions"
+authors:
+  - name: arnodjiang
+version: 0.1.0
+license: MIT
+repository-code: https://github.com/arnodjiang/Vision-JEV
+url: https://github.com/arnodjiang/Vision-JEV
+keywords:
+  - multimodal question answering
+  - information extraction
+  - efficient inference
+  - Qwen3.5
+  - LoRA
