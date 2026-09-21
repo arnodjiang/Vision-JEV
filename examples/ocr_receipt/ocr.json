@@ -1,0 +1,108 @@
+{
+  "provenance": "Synthetic OCR-style transcription from a rendered fixture; not OCR engine output.",
+  "image": "receipt.png",
+  "width": 560,
+  "height": 660,
+  "spans": [
+    {
+      "id": "line-0",
+      "text": "NORTHSIDE MARKET",
+      "bbox": [
+        35,
+        43,
+        266,
+        59
+      ]
+    },
+    {
+      "id": "line-1",
+      "text": "Receipt R-1042",
+      "bbox": [
+        35,
+        99,
+        200,
+        121
+      ]
+    },
+    {
+      "id": "line-2",
+      "text": "Date: 2026-09-21",
+      "bbox": [
+        35,
+        157,
+        222,
+        173
+      ]
+    },
+    {
+      "id": "line-3",
+      "text": "Coffee beans       12.00 USD",
+      "bbox": [
+        35,
+        212,
+        329,
+        230
+      ]
+    },
+    {
+      "id": "line-4",
+      "text": "Oat milk            4.50 USD",
+      "bbox": [
+        35,
+        270,
+        283,
+        287
+      ]
+    },
+    {
+      "id": "line-5",
+      "text": "Subtotal           16.50 USD",
+      "bbox": [
+        35,
+        327,
+        297,
+        344
+      ]
+    },
+    {
+      "id": "line-6",
+      "text": "Tax                 1.32 USD",
+      "bbox": [
+        35,
+        385,
+        259,
+        401
+      ]
+    },
+    {
+      "id": "line-7",
+      "text": "Total              17.82 USD",
+      "bbox": [
+        35,
+        441,
+        275,
+        458
+      ]
+    },
+    {
+      "id": "line-8",
+      "text": "Payment: CARD",
+      "bbox": [
+        35,
+        499,
+        205,
+        520
+      ]
+    },
+    {
+      "id": "line-9",
+      "text": "Thank you!",
+      "bbox": [
+        35,
+        554,
+        158,
+        577
+      ]
+    }
+  ]
+}

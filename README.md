@@ -57,6 +57,8 @@ All three tasks share a trainable pointer head. Evidence boxes are supplied by c
 
 ## Quick start
 
+For a concrete OCR workflow, start with the [multi-field receipt example](examples/ocr_receipt/README.md): supply 2–6 keys and return values, candidate probabilities, evidence, and abstention status. Its local HTML viewer includes a reference-only preview; real probabilities require your trained checkpoint.
+
 Use Python 3.11 or newer. CPU is sufficient for the small architecture tests. Actual model runs download the backbone and require additional memory; use CUDA for larger training experiments.
 
 ```bash
