@@ -162,3 +162,5 @@ Until a manuscript is available, cite this software repository. GitHub citation 
 Built on [Qwen3.5](https://huggingface.co/Qwen/Qwen3.5-0.8B), [Transformers](https://github.com/huggingface/transformers), and [PEFT](https://github.com/huggingface/peft). Inspired by [TypeSafe Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) and related open work in [Kev](https://github.com/jaredpalmer/kev). Vision-JEV is an independent project and does not claim to reproduce Jev's private architecture.
 
 Original repository code is [MIT licensed](LICENSE). Base weights and upstream datasets retain their own licenses; this repository does not redistribute them. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+We also thank the authors of [NanoJev](https://github.com/TianyuCodings/NanoJev) for openly sharing their dynamic-candidate decision model and training pipeline. NanoJev is related work on direct probability outputs; Vision-JEV is an independent multimodal KIE implementation, not a NanoJev fork. See [the method comparison](docs/METHOD.md#relationship-to-nanojev) for the architectural and training differences.

@@ -91,5 +91,6 @@ MStructQA 的 128 个基础案例、24 种语言、8,960 个 QA 变体作为冻�
 - [Transformers Qwen3.5 实现](https://github.com/huggingface/transformers/tree/main/src/transformers/models/qwen3_5)
 - [TypeSafe Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)：类型化决策理念。
 - [Kev](https://github.com/jaredpalmer/kev)：相关开放实现；本项目没有声称复现 Jev 私有架构。
+- [NanoJev](https://github.com/TianyuCodings/NanoJev)：感谢作者开放动态候选决策模型及训练流程。双方都研究直接输出决策概率的路线；Vision-JEV 是面向多模态 KIE 的独立实现，并非 NanoJev 的分支。具体区别见[方法对照](docs/METHOD.md#relationship-to-nanojev)。
 
 本库原创代码 MIT；基础模型与上游数据分别遵守其许可。本库与 TypeSafe 无隶属关系。

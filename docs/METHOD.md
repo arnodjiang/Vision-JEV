@@ -45,3 +45,11 @@ This makes candidate recall an upper bound on extraction coverage. Evidence is s
 A direct readout avoids autoregressive answer decoding and can batch independent decisions. However, extra candidate text increases prefill work, image encoding remains, and candidate generation or fallback may dominate total latency. Speedup must therefore be measured with all these costs included.
 
 Current outputs are raw softmax probabilities, not calibrated correctness estimates. Calibration and abstention policies require a separate development set. No speed, calibration, or generalization improvement is claimed by the smoke tests.
+
+## Relationship to NanoJev
+
+We acknowledge [NanoJev](https://github.com/TianyuCodings/NanoJev) as related open work. Both projects attach decision heads to a Qwen backbone and return candidate probabilities without autoregressive answer decoding. Vision-JEV was implemented independently; this acknowledgment does not imply code derivation or equivalent results.
+
+As documented on September 21, 2026, NanoJev uses Qwen3-0.6B, candidate-path scoring with set attention for choices, and separate Boolean/ordered-score outputs. Its released `unified-games-v1` checkpoint uses supervised categorical cross entropy. The [training description](https://github.com/TianyuCodings/NanoJev/blob/main/docs/SONIC_PREDICT_POSITION.md) distinguishes the RGB visual expert from the student's structured visible-state input. Vision-JEV instead accepts images through Qwen3.5-0.8B's native visual encoder and uses a marker-based pointer head for supplied KIE/answer candidates, including two-candidate Boolean decisions.
+
+Our current objective is supervised candidate cross entropy, with either head-only updates or language-FFN LoRA. LoRA specifies which parameters are updated; it does not define the learning objective or require autoregressive decoding. NanoJev's supervised release supports the relevance of a direct-decision baseline, but does not establish the effectiveness of our LoRA recipe. Nor should its released supervised recipe be conflated with every separate probability-learning experiment in that repository. Vision-JEV does not currently implement RLCD or claim to reproduce TypeSafe Jev's training. Calibration, adaptation ablations, and end-to-end QA efficiency remain to be evaluated.
