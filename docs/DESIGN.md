@@ -1,57 +1,59 @@
-# Vision-JEV 设计与实验计划
+# Vision-JEV design and experiment plan
 
-## 定位
+## Scope
 
-在 Qwen3.5-0.8B 上学习非生成式、基于候选的多模态信息抽取与判别，输出可被 QA 系统消费的值与证据引用。该组件不承诺解决任意开放 VQA。
+Adapt Qwen3.5-0.8B for non-generative, candidate-based multimodal information extraction and decisions. The component returns values and evidence references for downstream QA; it does not solve arbitrary open-ended VQA.
 
-输入：图片 I、问题 q、候选集合 C、可选正文 x。
-输出：P(c|I,q,C,x)、候选携带的值及证据、拒答状态。
+Inputs: image I, question q, candidate set C, and optional context x.
+Outputs: P(c | I, q, C, x), candidate-provided values and evidence, and abstention status.
 
-## 已实现模型改造
+## Implemented model changes
 
-从官方检查点加载 `Qwen3_5Model`，保留视觉和语言模块，不调用词表输出头。候选结束位置的 hidden state 为 h_c，所有候选之后的决策位置为 h_q：
+Load `Qwen3_5Model` from the official checkpoint, retain its vision and language modules, and bypass the vocabulary output head. Let h_c denote a candidate-end hidden state and h_q the decision state after all candidates:
 
-`score(c) = (Wq h_q + bq) · (Wk h_c + bk) / sqrt(d)`
+```text
+score(c) = (Wq h_q + bq)^T (Wk h_c + bk) / sqrt(d)
+```
 
-softmax 在当前请求候选集合上归一化。使用交叉熵监督 `target`。语言主干 FFN 的 gate/up/down projection 接入 rank-16 LoRA；视觉主干默认冻结。语言主干混合层中的 FFN 均得到适配。支持仅训练头的消融。
+Softmax normalizes over the request's candidates. Cross entropy supervises `target`. Rank-16 LoRA adapts language FFN gate/up/down projections across the hybrid layers; vision weights remain frozen by default. Head-only training provides an ablation.
 
-标记使用 tokenizer 已有保留 token，不新增或随机扩展 embedding。输入中出现特殊 token 直接拒绝，避免候选／决策位置被伪造。序列超过上限报错，不静默截断图片或监督位置。
+Markers use existing reserved tokenizer tokens without expanding embeddings. Inputs containing special tokens are rejected to prevent forged candidate or decision positions. Oversized sequences raise an error rather than silently truncating images or supervision positions.
 
-当前支持独立问题按 batch 前向，候选一次性打分；batch 行之间不共享循环状态。重复图片仍重复编码，尚未共享前缀。候选文本在因果序列中的顺序影响表示，头层的排列等变性并不意味着完整模型的顺序不变性。应做随机顺序训练和置换鲁棒性评测。
+Independent questions run as batch rows, with candidates scored together and recurrent states isolated between rows. Repeated images are encoded repeatedly; shared-prefix inference is not implemented. Causal candidate order affects representations: equivariance of the head alone does not make the complete model order-invariant. Use shuffled-candidate training and evaluate permutation robustness.
 
-## 模型输出与 QA 结合
+## Integration with QA
 
-1. 输入图像经独立 OCR、表格解析器或任务固定类别产生候选。
-2. Vision-JEV 判断目标字段／类别，保留候选证据引用。
-3. 应用根据已知任务执行确定性计算；未知操作交给 QA 模型。
-4. null 或低置信度时回退原 QA 模型。
+1. An external OCR system, table parser, or fixed task vocabulary supplies candidates.
+2. Vision-JEV selects a field or category and retains its evidence references.
+3. The application executes known deterministic operations or passes the result to a QA model.
+4. Null or low-confidence predictions trigger an application-provided QA fallback.
 
-候选值与 bbox 来自输入，不能将其描述为模型独立识别出的原始字符串或预测定位框。当前无 OCR、bbox 回归、可学习计算计划或自由文本翻译。加入这些能力需要独立标签与实现。
+Values and bounding boxes come from the input candidates. They are not independently recognized strings or predicted boxes. OCR, box regression, learned calculation plans, and free-text translation require additional implementations and supervision.
 
-## 数据建设
+## Dataset construction
 
-- MStructBench 的现有 128 个源案例及其所有语言、重绘版本冻结用于评测。
-- 从不重叠的源文档与独立合成图表构建训练数据。按原始 source/document 身份分组，不能只用 QA ID。
-- 候选生成不能访问答案或渲染数据；用答案做标签匹配和人工审核可以，用答案补齐测试候选不可以。
-- 开放抽取需要原始表头、单元格、单位、OCR span 的候选及证据；错误候选、无答案、跨语言标签也要覆盖。
-- 至少报告候选覆盖率、覆盖条件下准确率和完整样本上的端到端准确率。
-- source group 去重必须另做上游身份核对；库内 group_id 检查仅防止已知 ID 重叠，不能自动发现改写或近重复。
+- Freeze all 128 MStructBench source cases and their translated or rendered variants for evaluation.
+- Build training data from non-overlapping documents and independent synthetic charts. Split by original source/document identity, not just QA identifier.
+- Candidate generation must not access reference answers or hidden rendering data. References may support label matching and annotation review, but must not fill gaps in test candidates.
+- Include headers, cells, units, OCR spans, and evidence, as well as distractors, unanswerable cases, and cross-language labels.
+- Report candidate recall, accuracy conditional on coverage, and end-to-end accuracy over all examples.
+- Audit source identities upstream. The library's `group_id` checks detect known identifier overlap, not paraphrases or near-duplicates automatically.
 
-## 实验
+## Experiments
 
-基线：原始 Qwen3.5-0.8B；同数据生成式微调；OCR+文本模型；冻结主干+头；LoRA+头。
+Baselines: original Qwen3.5-0.8B, generative fine-tuning on matched data, OCR plus a text model, frozen backbone plus head, and LoRA plus head.
 
-质量：原始 MStructQA 语义 ACC、数值与单位正确率、候选 recall、候选准确率、拒答覆盖率。证据准确率需要单独人工／结构标签。报告 24 语言 LQA 和中英文 pivot XQA；按原始 128 个 case 做聚类 bootstrap。
+Quality metrics include original MStructQA semantic accuracy, numeric and unit correctness, candidate recall, candidate accuracy, and abstention coverage. Evidence accuracy needs separate human or structural labels. Report LQA across 24 languages and XQA with English and Chinese pivots. Bootstrap by the original 128 cases to account for correlated variants.
 
-效率：图片预处理、OCR、主干、头、格式化、回退全部纳入端到端延迟。固定硬件、分辨率、候选数、batch、精度与 warmup；分别报告冷启动与热运行。当前 CLI latency 从预处理开始，不包含模型加载或外部候选生成，不可直接当作完整系统延迟。
+End-to-end latency must include image preprocessing, OCR, backbone, head, formatting, and fallback. Fix hardware, resolution, candidate count, batch size, precision, and warmup; report cold starts separately from warm runs. Current CLI timing starts at preprocessing and excludes model loading and external candidate generation, so it is not complete system latency.
 
-非生成式 head 省去 token decode，但新增候选输入也增加 prefill。实际收益取决于输入长度、候选成本与回退率，暂无加速结论。
+Direct readout avoids token decoding, but candidate text adds prefill work. Benefits depend on input length, candidate-generation costs, and fallback frequency. No speedup has been established.
 
-## 后续阶段及验收
+## Milestones and acceptance criteria
 
-1. 当前原型：实际 Qwen3.5 混合结构的视觉前向、LoRA 反向、checkpoint 回读一致性测试。
-2. 实际 0.8B：固定官方 revision，在独立图像训练集上训练头和 LoRA，发布权重及 model card；先校准再选择拒答阈值。
-3. 多字段：Qwen3.5 前缀缓存分支必须隔离每层的 full-attention KV、DeltaNet recurrent/conv state，保留多模态位置。单独问题与批量分支概率一致性是合入条件。
-4. 学习式定位与原生抽取：增加证据定位／span／set head，减少对外部 OCR 候选的依赖；报告新增监督成本。
+1. Prototype: verify visual forward passes, LoRA backward passes, and checkpoint recovery on the real Qwen3.5 hybrid architecture.
+2. Task training: pin the official 0.8B revision, train on independent image data, evaluate, and release weights with a model card. Calibrate before selecting abstention thresholds.
+3. Multiple fields: isolate full-attention KV caches and DeltaNet recurrent/convolution states at every layer while preserving multimodal positions. Require separate-versus-batched probability equivalence before merging cache optimizations.
+4. Learned localization and native extraction: add evidence-localization, span, or set heads to reduce external OCR dependence, and report the additional supervision cost.
 
-当前已在官方 0.8B 上完成单步合成图像训练链路验证，但第 2 阶段的正式数据训练、任务评测及权重发布仍未完成；第 3–4 阶段尚未实现。详见 VALIDATION.md。
+One-step synthetic-image training on the official 0.8B model is verified. Formal task training, evaluation, and weight release in milestone 2 remain incomplete; milestones 3 and 4 are not implemented. See [the validation record](VALIDATION.md).

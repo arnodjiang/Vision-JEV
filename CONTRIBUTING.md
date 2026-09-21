@@ -1,5 +1,7 @@
 # Contributing
 
+Use English for repository documentation, code comments, issues, and pull requests. Multilingual task data may retain its original language. For bug reports, include reproduction steps, package versions, and the full error message with sensitive information removed. For substantial changes, open an issue to discuss the proposed behavior and evaluation before implementation.
+
 Use Python 3.11+ and install `python -m pip install -e '.[dev]'`.
 
 Before submitting a change:

@@ -9,7 +9,7 @@
 
 **A Qwen3.5-0.8B research framework for candidate-based multimodal information extraction and non-autoregressive decisions.**
 
-[中文说明](README.zh-CN.md) · [Method](docs/METHOD.md) · [Data format](docs/DATA_FORMAT.md) · [Experiments](docs/EXPERIMENTS.md) · [Validation](docs/VALIDATION.md)
+[Method](docs/METHOD.md) · [Data format](docs/DATA_FORMAT.md) · [Experiments](docs/EXPERIMENTS.md) · [Validation](docs/VALIDATION.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
