@@ -1,4 +1,4 @@
-"""Candidate-level evaluation. This is not MStructQA semantic accuracy."""
+"""Candidate-level evaluation, distinct from end-to-end QA semantic accuracy."""
 
 import math
 

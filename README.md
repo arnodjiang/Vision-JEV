@@ -122,11 +122,11 @@ The tested 0.8B configuration has **5,570,816 trainable parameters**, including 
 | Hybrid layers, visual forward, gradients, serialization, batching | Covered by automated tests |
 | Official 0.8B synthetic-image training and recovery | Verified as a smoke test |
 | LoRA merge and separate-versus-batch consistency | Checked on synthetic inputs |
-| MStructBench QA accuracy and cross-language generalization | Not yet evaluated |
+| Held-out QA accuracy and cross-language generalization | Not yet evaluated |
 | End-to-end speedup and quality–latency tradeoff | Not yet measured |
 | Task-ready model weights | Not released |
 
-[MStructBench](https://huggingface.co/datasets/arnodjiang/MStructBench) is the intended frozen multilingual QA evaluation set. Its 128 base cases expand into 8,960 language configurations; these are correlated variants, not independent training examples. The current library does not automatically convert its references into candidate labels. See [dataset notes](docs/MSTRUCT_REFERENCE.md) and the [experimental protocol](docs/EXPERIMENTS.md).
+Evaluate on held-out documents with independently annotated candidates and evidence. Keep translated and rendered variants of the same source in one split. See the [experimental protocol](docs/EXPERIMENTS.md).
 
 ## Repository map
 

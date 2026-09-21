@@ -32,7 +32,7 @@ Values and bounding boxes come from the input candidates. They are not independe
 
 ## Dataset construction
 
-- Freeze all 128 MStructBench source cases and their translated or rendered variants for evaluation.
+- Freeze held-out source documents and all their translated or rendered variants for evaluation.
 - Build training data from non-overlapping documents and independent synthetic charts. Split by original source/document identity, not just QA identifier.
 - Candidate generation must not access reference answers or hidden rendering data. References may support label matching and annotation review, but must not fill gaps in test candidates.
 - Include headers, cells, units, OCR spans, and evidence, as well as distractors, unanswerable cases, and cross-language labels.
@@ -43,7 +43,7 @@ Values and bounding boxes come from the input candidates. They are not independe
 
 Baselines: original Qwen3.5-0.8B, generative fine-tuning on matched data, OCR plus a text model, frozen backbone plus head, and LoRA plus head.
 
-Quality metrics include original MStructQA semantic accuracy, numeric and unit correctness, candidate recall, candidate accuracy, and abstention coverage. Evidence accuracy needs separate human or structural labels. Report LQA across 24 languages and XQA with English and Chinese pivots. Bootstrap by the original 128 cases to account for correlated variants.
+Quality metrics include end-to-end QA accuracy, numeric and unit correctness, candidate recall, candidate accuracy, and abstention coverage. Evidence accuracy needs separate human or structural labels. For multilingual evaluation, report results by language and distinguish matched-language from cross-language questions. Bootstrap by source document to account for correlated variants.
 
 End-to-end latency must include image preprocessing, OCR, backbone, head, formatting, and fallback. Fix hardware, resolution, candidate count, batch size, precision, and warmup; report cold starts separately from warm runs. Current CLI timing starts at preprocessing and excludes model loading and external candidate generation, so it is not complete system latency.
 

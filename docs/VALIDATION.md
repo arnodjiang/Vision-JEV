@@ -33,7 +33,7 @@ Pinned revision: `2fc06364715b967f1860aea9cf38778875588b17`.
 | Held-out NLL | Approximately 24.7364 |
 | Save and reload | Separate-process image prediction succeeded |
 
-This checkpoint verifies parameter updates and I/O. It is not a useful trained KIE model and provides no evidence of QA improvement, calibration, or speedup. No MStructBench examples were used for this update.
+This checkpoint verifies parameter updates and I/O. It is not a useful trained KIE model and provides no evidence of QA improvement, calibration, or speedup.
 
 The first real-weight attempt exposed BF16 backbone / FP32 head incompatibility. Default loading is now explicitly FP32, readout inputs match the head dtype, and a regression test covers mixed precision.
 
@@ -56,4 +56,4 @@ Generated checkpoints, images, predictions and local reports are excluded from G
 
 ## Unverified research outcomes
 
-Task-ready KIE training, complete frozen MStructBench evaluation, candidate generation, learned localization, calibration, shared visual-prefix caching, and end-to-end quality–latency comparisons remain future work.
+Task-ready KIE training, held-out QA evaluation, candidate generation, learned localization, calibration, shared visual-prefix caching, and end-to-end quality–latency comparisons remain future work.

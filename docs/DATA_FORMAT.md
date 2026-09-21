@@ -33,7 +33,7 @@ Boolean requests require exactly two candidates with actual JSON Boolean values,
 
 `candidate_id` is the raw top-ranked candidate, including when abstention occurs. `value` is null on abstention. `probabilities` maps candidate IDs to probabilities; `calibrated` is false. `evidence` retains the selected candidate's supplied metadata and is not a verified localization claim.
 
-Evaluation `accuracy` measures raw candidate accuracy, including abstained predictions. `coverage` and `selective_accuracy` describe accepted predictions. Missing predictions count as incorrect; their target probability is floored at 1e-12 for NLL. These metrics are not the original MStructQA semantic score.
+Evaluation `accuracy` measures raw candidate accuracy, including abstained predictions. `coverage` and `selective_accuracy` describe accepted predictions. Missing predictions count as incorrect; their target probability is floored at 1e-12 for NLL. These candidate-level metrics do not measure end-to-end QA semantic correctness.
 
 ## Candidate construction
 

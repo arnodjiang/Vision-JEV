@@ -48,7 +48,7 @@ The comparison uses raw logits so that saturated softmax probabilities cannot co
 
 Build a separate training corpus from original documents disjoint from the frozen evaluation set. Preserve source IDs across translations, visual variants, and question variants. CLI `group_id` checks cannot discover unlabelled duplicates; audit provenance separately.
 
-Generate candidates before looking at evaluation answers. Annotate candidate targets and evidence independently. Include challenging distractors, missing answers, units, script diversity, and candidate-order changes. Use a development split for hyperparameters, calibration, and abstention thresholds; do not repeatedly tune on MStructBench.
+Generate candidates before looking at evaluation answers. Annotate candidate targets and evidence independently. Include challenging distractors, missing answers, units, script diversity, and candidate-order changes. Use a development split for hyperparameters, calibration, and abstention thresholds; do not tune on the held-out test set.
 
 ## 5. Baselines and ablations
 
@@ -70,7 +70,7 @@ Report full-denominator QA accuracy, candidate recall, selection accuracy condit
 
 Measure image processing, candidate generation, prefill, readout, postprocessing, and fallback in end-to-end latency. Separate cold loading, warm requests, repeated-image cache conditions, and batch sizes. Report P50/P95, throughput, peak device memory, and the frequency/cost of fallback. The CLI's `latency_seconds` excludes model loading and external candidate generation and is not a complete system speed measurement.
 
-Use paired comparisons and resample original source cases, not individual correlated language variants. Report LQA per language and both cross-language pivots using the upstream weighting protocol. Existing MStructBench cases contain one base question each; independent multi-field throughput experiments require additional data.
+Use paired comparisons and resample original source cases, not individual correlated language variants. For multilingual tasks, report per-language results and document cross-language aggregation weights. Multi-field throughput experiments require multiple distinct questions per source image; translations of one question do not constitute distinct fields.
 
 ## 7. Reporting gate
 
