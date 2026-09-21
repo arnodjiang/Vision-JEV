@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Define JEV as Joint Extraction and Verification, align citation titles, and clarify planned verification and confidence research.
 - Make evaluation guidance dataset-agnostic and remove project-specific benchmark notes.
 - Standardize repository documentation on English and translate design and dataset reference notes.
 - Acknowledge NanoJev and document the relationship between the two implementations.

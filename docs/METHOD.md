@@ -6,6 +6,8 @@ Can structured extraction and direct decisions reduce the cost of multimodal QA 
 
 This is a hypothesis, not an established result. Version 0.1 implements the model component needed to test it.
 
+In this project, JEV means Joint Extraction and Verification. Verification is a planned research task: assess whether the image and available context support a candidate answer, including cases with insufficient evidence. The current shared candidate head and Boolean interface do not establish a trained verifier. Dedicated supervision, joint-training ablations, and calibration remain future work.
+
 ## Inputs and outputs
 
 Let I be an image, q a question, x optional inference-time context, and C a set of candidates. Each candidate has an identifier, text, and optionally a typed value and evidence metadata. The model predicts P(c | I, q, x, C).

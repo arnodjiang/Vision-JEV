@@ -1,7 +1,7 @@
 <div align="center">
 
 # Vision-JEV
-### Efficient Multimodal Question Answering through Structured Extraction and Decisions
+### Joint Extraction and Verification for Efficient Multimodal Question Answering
 
 [![Tests](https://github.com/arnodjiang/Vision-JEV/actions/workflows/tests.yml/badge.svg)](https://github.com/arnodjiang/Vision-JEV/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -15,11 +15,19 @@
 
 ## Overview
 
+**JEV stands for Joint Extraction and Verification in this project.** The name describes our research direction: extract relevant information and assess whether visual evidence supports a candidate answer. This is our own expansion, not an official expansion of TypeSafe Jev. The current release implements candidate extraction and decisions; dedicated answer-verification supervision and evaluation are planned.
+
 Many visual QA questions require selecting a field, identifying a category, or deciding whether a condition holds. Vision-JEV studies an alternative to generating an answer token by token: preserve a pretrained vision-language backbone, adapt it with LoRA, and read out a probability distribution over structured candidates.
 
 Given an image, a question, optional context, and inference-time candidates, the model returns a selected value, candidate-provided evidence, and a distribution for downstream QA. Independent questions can run as separate rows in one batch. Structured outputs can support application-defined calculations or a generative QA fallback.
 
 **Research status — v0.1 prototype.** The title describes the research objective. End-to-end efficiency and QA improvements have **not** been established. The implementation has been tested with official Qwen3.5-0.8B weights, including a one-step synthetic-image LoRA update, checkpoint recovery, batch inference, and adapter merging. No task-ready checkpoint or manuscript has been released. See the [validation record](docs/VALIDATION.md).
+
+## Why confidence matters
+
+Domain-specific QA workflows such as invoice processing, contract review, and report analysis need low latency and a basis for deciding when to accept an answer, request review, or fall back to another model. General-purpose generative models offer flexible questions, while specialized extractors often target fixed fields. Vision-JEV explores a candidate-based component that can support flexible QA workflows with explicit decisions and evidence references.
+
+Confidence is a research priority: a probability distribution should eventually help determine when an answer is supported and when to abstain. Current softmax outputs are uncalibrated, and candidate-provided evidence is not independently verified. Reliable confidence requires held-out calibration and evaluation; neither reliable confidence nor complete free-form QA is an implemented capability today.
 
 ## Method at a glance
 
@@ -122,6 +130,7 @@ The tested 0.8B configuration has **5,570,816 trainable parameters**, including 
 | Hybrid layers, visual forward, gradients, serialization, batching | Covered by automated tests |
 | Official 0.8B synthetic-image training and recovery | Verified as a smoke test |
 | LoRA merge and separate-versus-batch consistency | Checked on synthetic inputs |
+| Dedicated answer verification and confidence calibration | Planned |
 | Held-out QA accuracy and cross-language generalization | Not yet evaluated |
 | End-to-end speedup and quality–latency tradeoff | Not yet measured |
 | Task-ready model weights | Not released |
@@ -141,7 +150,7 @@ docs/                Method, data contract, protocol, validation, roadmap
 
 ## Roadmap
 
-The next research steps are independent KIE supervision, calibrated abstention, full QA evaluation with candidate recall and fallback accounting, and measured serving efficiency. Shared-prefix acceleration must preserve both attention caches and DeltaNet states. See [the roadmap](docs/ROADMAP.md).
+The next research steps are independent KIE and answer-verification supervision, calibrated abstention, full QA evaluation with candidate recall and fallback accounting, and measured serving efficiency. Shared-prefix acceleration must preserve both attention caches and DeltaNet states. See [the roadmap](docs/ROADMAP.md). We welcome discussions, issues, and contributions on extraction, verification, calibration, and efficient multimodal QA.
 
 ## Citation
 
@@ -150,7 +159,7 @@ Until a manuscript is available, cite this software repository. GitHub citation 
 ```bibtex
 @software{visionjev2026,
   author = {arnodjiang},
-  title = {Vision-JEV: Efficient Multimodal Question Answering through Structured Extraction and Decisions},
+  title = {Vision-JEV: Joint Extraction and Verification for Efficient Multimodal Question Answering},
   year = {2026},
   version = {0.1.0},
   url = {https://github.com/arnodjiang/Vision-JEV}

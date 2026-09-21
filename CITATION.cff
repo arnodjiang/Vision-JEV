@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "Please cite this software repository; no published paper is currently claimed."
 type: software
-title: "Vision-JEV: Efficient Multimodal Question Answering through Structured Extraction and Decisions"
+title: "Vision-JEV: Joint Extraction and Verification for Efficient Multimodal Question Answering"
 authors:
   - name: arnodjiang
 version: 0.1.0
