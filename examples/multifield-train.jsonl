@@ -1,0 +1,1 @@
+{"id": "toy-train-1", "group_id": "synthetic-a", "context": "Revenue: 12 USD; profit: 3 USD.", "candidates": [{"id": "revenue", "text": "12 USD", "value": 12}, {"id": "profit", "text": "3 USD", "value": 3}, {"id": "none", "text": "Not present", "is_null": true}], "fields": [{"key": "revenue", "target": "revenue"}, {"key": "profit", "target": "profit"}]}

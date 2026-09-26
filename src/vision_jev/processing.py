@@ -17,9 +17,11 @@ class RecordProcessor:
 
     def __call__(self, record, training=False):
         validate(record, require_target=training)
-        texts = [record["question"], record.get("context", "")] + [
-            c["text"] for c in record["candidates"]
-        ]
+        fields = record.get("fields")
+        questions = (
+            [f.get("question", f["key"]) for f in fields] if fields else [record["question"]]
+        )
+        texts = questions + [record.get("context", "")] + [c["text"] for c in record["candidates"]]
         # Reject special-token injection, including image placeholders and chat delimiters.
         for text in texts:
             if any(
@@ -28,11 +30,17 @@ class RecordProcessor:
                 | {CAND_MARK, QUERY_MARK}
             ):
                 raise ValueError("User content contains a reserved tokenizer token")
-        prompt = f"Task: {record['task']}\nContext: {record.get('context', '')}\nQuestion: {record['question']}\nCandidates:\n"
+        if fields:
+            prompt = f"Task: extract fields\nContext: {record.get('context', '')}\nCandidates:\n"
+        else:
+            prompt = f"Task: {record['task']}\nContext: {record.get('context', '')}\nQuestion: {record['question']}\nCandidates:\n"
         prompt += "\n".join(
             f"{i}: {c['text']} {CAND_MARK}" for i, c in enumerate(record["candidates"])
         )
-        prompt += f"\nDecide: {QUERY_MARK}"
+        if fields:
+            prompt += "\n" + "\n".join(f"Field: {q} Decide: {QUERY_MARK}" for q in questions)
+        else:
+            prompt += f"\nDecide: {QUERY_MARK}"
         content = []
         image = None
         if record.get("image"):
@@ -52,23 +60,31 @@ class RecordProcessor:
             raise ValueError("Input exceeds max_length; reduce resolution/candidates explicitly")
         cp = (ids == self.marker_ids[0]).nonzero().flatten()
         qp = (ids == self.marker_ids[1]).nonzero().flatten()
-        if cp.numel() != len(record["candidates"]) or qp.numel() != 1:
+        if cp.numel() != len(record["candidates"]) or qp.numel() != len(questions):
             raise ValueError("Marker count mismatch")
         batch.update(
             candidate_positions=cp[None],
-            query_positions=qp,
+            query_positions=qp[None] if fields else qp,
             candidate_mask=torch.ones(1, len(cp), dtype=torch.bool),
         )
         if training:
-            batch["labels"] = torch.tensor(
-                [[c["id"] for c in record["candidates"]].index(record["target"])]
+            ids = [c["id"] for c in record["candidates"]]
+            targets = (
+                [ids.index(f["target"]) for f in fields]
+                if fields
+                else [ids.index(record["target"])]
             )
+            batch["labels"] = torch.tensor([targets] if fields else targets)
         return batch
 
     def batch(self, records, training=False):
         """Independent padded rows; no shared recurrent state or prefix caching."""
         if not records:
             raise ValueError("Empty batch")
+        if any("fields" in r for r in records):
+            raise ValueError(
+                "Use one multi-field document per call; document batching is not supported"
+            )
         rows = [self(record, training) for record in records]
         batch = {}
         token_keys = ("input_ids", "attention_mask", "mm_token_type_ids", "token_type_ids")

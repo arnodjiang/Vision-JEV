@@ -125,7 +125,8 @@ def test_real_vision_forward():
     assert torch.isfinite(result["loss"])
 
 
-def test_checkpoint_roundtrip(tmp_path):
+@pytest.mark.parametrize("multi", [False, True])
+def test_checkpoint_roundtrip(tmp_path, multi):
     class DummyProcessor:
         def save_pretrained(self, directory):
             directory.mkdir()
@@ -135,7 +136,7 @@ def test_checkpoint_roundtrip(tmp_path):
         input_ids=torch.tensor([[1, 2, 3, 4]]),
         attention_mask=torch.ones(1, 4, dtype=torch.long),
         candidate_positions=torch.tensor([[1, 2]]),
-        query_positions=torch.tensor([3]),
+        query_positions=torch.tensor([[2, 3]]) if multi else torch.tensor([3]),
         candidate_mask=torch.ones(1, 2, dtype=torch.bool),
     )
     with torch.no_grad():
@@ -250,3 +251,42 @@ def test_scoring_abstention_and_invalid_distribution():
         score(records, [p])
     with pytest.raises(ValueError, match="Empty"):
         score([], [])
+
+
+def test_multi_field_one_forward_and_loss(tmp_path):
+    model = tiny_model()
+    model.configure_training("lora", rank=2)
+    ids = torch.tensor([[1, 2, 3, 4, 5, 6, 7, 8]])
+    calls = []
+    hook = model.backbone.register_forward_hook(lambda *args: calls.append(1))
+    inputs = dict(
+        input_ids=ids,
+        attention_mask=torch.ones_like(ids),
+        candidate_positions=torch.tensor([[1, 3]]),
+        query_positions=torch.tensor([[5, 7]]),
+        candidate_mask=torch.ones(1, 2, dtype=torch.bool),
+    )
+    out = model(**inputs, labels=torch.tensor([[0, 1]]))
+    assert calls == [1]
+    assert out["logits"].shape == (1, 2, 2)
+    out["loss"].backward()
+    assert torch.isfinite(out["loss"])
+    assert model.head.query.weight.grad.abs().sum() > 0
+    hook.remove()
+    model.eval()
+    full = model(**inputs)["logits"]
+    for i in range(2):
+        single = model(**dict(inputs, query_positions=inputs["query_positions"][:, i]))["logits"]
+        torch.testing.assert_close(full[:, i], single)
+
+
+def test_multi_field_schema_and_missing_metrics():
+    r = read_records("examples/train.jsonl", True)[0]
+    r.pop("question")
+    r.pop("target")
+    r["fields"] = [{"key": "revenue", "target": "revenue"}, {"key": "profit", "target": "profit"}]
+    validate(r, True)
+    assert score([r], [])["missing"] == 2
+    r["fields"][1]["key"] = "revenue"
+    with pytest.raises(ValueError, match="unique"):
+        validate(r)

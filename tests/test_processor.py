@@ -63,3 +63,24 @@ def test_batch_image_text_and_candidate_padding(processor, tmp_path):
     assert encoded["input_ids"].shape[0] == 2
     assert encoded["image_grid_thw"].shape[0] == 1
     assert encoded["candidate_mask"].tolist() == [[True, True, True], [True, True, False]]
+
+
+def test_shared_document_fields_and_label_isolation(processor):
+    from vision_jev.schema import read_records
+
+    r = read_records("examples/ocr_receipt/requests.jsonl")[0]
+    r.pop("question")
+    r["fields"] = [{"key": "total", "target": "line-7"}, {"key": "date", "target": "line-2"}]
+    batch = processor(r, True)
+    assert batch["input_ids"].shape[0] == 1
+    assert batch["image_grid_thw"].shape[0] == 1
+    assert batch["query_positions"].shape == (1, 2)
+    assert batch["labels"].shape == (1, 2)
+    changed = copy.deepcopy(r)
+    changed["fields"][0]["target"] = "none"
+    other = processor(changed, True)
+    assert (batch["input_ids"] == other["input_ids"]).all()
+    assert batch["labels"][0, 0] != other["labels"][0, 0]
+    r["fields"][0]["question"] = "<|fim_middle|>"
+    with pytest.raises(ValueError, match="reserved"):
+        processor(r)

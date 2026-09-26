@@ -19,7 +19,7 @@
 
 Many visual QA questions require selecting a field, identifying a category, or deciding whether a condition holds. Vision-JEV studies an alternative to generating an answer token by token: preserve a pretrained vision-language backbone, adapt it with LoRA, and read out a probability distribution over structured candidates.
 
-Given an image, a question, optional context, and inference-time candidates, the model returns a selected value, candidate-provided evidence, and a distribution for downstream QA. Independent questions can run as separate rows in one batch. Structured outputs can support application-defined calculations or a generative QA fallback.
+Given an image, a question, optional context, and inference-time candidates, the model returns a selected value, candidate-provided evidence, and a distribution for downstream QA. A multi-field document accepts 2–6 field queries in one sequence, encoding the image once per call and scoring all fields in one backbone forward. Independent questions can also run as separate rows in one batch. Structured outputs can support application-defined calculations or a generative QA fallback.
 
 **Research status — v0.1 prototype.** The title describes the research objective. End-to-end efficiency and QA improvements have **not** been established. The implementation has been tested with official Qwen3.5-0.8B weights, including a one-step synthetic-image LoRA update, checkpoint recovery, batch inference, and adapter merging. No task-ready checkpoint or manuscript has been released. See the [validation record](docs/VALIDATION.md).
 
@@ -113,7 +113,7 @@ batched_results = pipeline.batch(records, threshold=0.8)
 print(result["value"], result["evidence"], result["probabilities"])
 ```
 
-Probabilities are **uncalibrated**. A threshold is an application choice, not a reliability guarantee. Batch rows have independent recurrent states; repeated images are still encoded repeatedly. Shared visual-prefix caching is future work.
+Probabilities are **uncalibrated**. A threshold is an application choice, not a reliability guarantee. Batch rows have independent recurrent states; repeated images are still encoded repeatedly. For a shared document, use the `fields` API described in the [data contract](docs/DATA_FORMAT.md#multi-field-documents). Cross-request visual-prefix caching is future work.
 
 ## Model adaptation
 

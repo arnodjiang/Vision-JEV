@@ -17,6 +17,30 @@ def score(records, predictions):
         raise ValueError("Duplicate predictions")
     if set(by_id) - {r["id"] for r in records}:
         raise ValueError("Unknown prediction IDs")
+    if any("fields" in r for r in records):
+        expanded, outputs = [], []
+        for i, r in enumerate(records):
+            p = by_id.get(r["id"])
+            if "fields" not in r:
+                expanded.append(dict(r, id=str((i, None))))
+                if p is not None:
+                    outputs.append(dict(p, id=str((i, None))))
+                continue
+            if p is not None and set(p.get("fields", {})) - {f["key"] for f in r["fields"]}:
+                raise ValueError("Unknown predicted field keys")
+            for f in r["fields"]:
+                identity = str((i, f["key"]))
+                item = {k: v for k, v in r.items() if k != "fields"}
+                item.update(
+                    id=identity,
+                    task="extract",
+                    question=f.get("question", f["key"]),
+                    target=f["target"],
+                )
+                expanded.append(item)
+                if p is not None and f["key"] in p.get("fields", {}):
+                    outputs.append(dict(p["fields"][f["key"]], id=identity))
+        return score(expanded, outputs)
     correct = covered = accepted_correct = 0
     nll = 0.0
     for r in records:

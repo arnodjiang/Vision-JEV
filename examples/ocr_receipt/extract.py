@@ -82,8 +82,11 @@ def main():
     from vision_jev.pipeline import VisionJEVPipeline
 
     pipeline = VisionJEVPipeline(args.checkpoint, device=args.device)
-    predictions = pipeline.batch(records, threshold=args.threshold)
-    print(json.dumps(format_fields(args.keys, predictions), indent=2))
+    document = {k: v for k, v in records[0].items() if k not in ("question", "task")}
+    document["fields"] = [
+        {"key": key, "question": r["question"]} for key, r in zip(args.keys, records, strict=True)
+    ]
+    print(json.dumps(pipeline(document, threshold=args.threshold), indent=2))
 
 
 if __name__ == "__main__":

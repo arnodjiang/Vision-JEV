@@ -24,6 +24,7 @@ def main():
     train.add_argument("--lr", type=float, default=2e-4)
     train.add_argument("--seed", type=int, default=42)
     train.add_argument("--shuffle-candidates", action="store_true")
+    train.add_argument("--shuffle-fields", action="store_true")
     predict = sub.add_parser("predict")
     predict.add_argument("--checkpoint", required=True)
     predict.add_argument("--data", required=True)
@@ -93,6 +94,10 @@ def main():
             for record in records:
                 r = dict(record)
                 r["candidates"] = list(record["candidates"])
+                if "fields" in r:
+                    r["fields"] = list(r["fields"])
+                    if args.shuffle_fields:
+                        random.shuffle(r["fields"])
                 if args.shuffle_candidates:
                     random.shuffle(r["candidates"])
                 batch = {k: v.to(args.device) for k, v in process(r, True).items()}
@@ -106,16 +111,16 @@ def main():
                 losses.append(loss.item())
             model.eval()
             correct = 0
+            total = 0
             with torch.inference_mode():
                 for r in heldout:
                     batch = {k: v.to(args.device) for k, v in process(r, True).items()}
-                    correct += int(
-                        model(**batch)["logits"].argmax(-1).item() == batch["labels"].item()
-                    )
+                    correct += (model(**batch)["logits"].argmax(-1) == batch["labels"]).sum().item()
+                    total += batch["labels"].numel()
             result = {
                 "epoch": epoch + 1,
                 "train_loss": sum(losses) / len(losses),
-                "heldout_candidate_accuracy": correct / len(heldout),
+                "heldout_candidate_accuracy": correct / total,
             }
             history.append(result)
             print(json.dumps(result), flush=True)

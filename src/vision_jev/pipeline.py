@@ -31,8 +31,22 @@ class VisionJEVPipeline:
         self.process = RecordProcessor(processor, max_length)
         self.model = VisionJEV.load(checkpoint).to(device).eval()
 
+    @torch.inference_mode()
     def __call__(self, record, threshold=0.0):
-        return self.batch([record], threshold)[0]
+        if "fields" not in record:
+            return self.batch([record], threshold)[0]
+        if not 0 <= threshold <= 1:
+            raise ValueError("threshold must be in [0,1]")
+        inputs = {k: v.to(self.device) for k, v in self.process(record).items()}
+        probabilities = self.model(**inputs)["logits"].softmax(-1)[0].cpu().tolist()
+        fields = {}
+        for field, probs in zip(record["fields"], probabilities, strict=True):
+            prediction = format_prediction(record, probs, threshold)
+            prediction.pop("id")
+            prediction["confidence"] = prediction["probabilities"][prediction["candidate_id"]]
+            prediction["confidence_kind"] = "uncalibrated_candidate_probability"
+            fields[field["key"]] = prediction
+        return {"id": record["id"], "source": "model", "fields": fields}
 
     @torch.inference_mode()
     def batch(self, records, threshold=0.0):

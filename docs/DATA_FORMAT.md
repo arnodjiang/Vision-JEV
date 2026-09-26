@@ -40,3 +40,28 @@ Evaluation `accuracy` measures raw candidate accuracy, including abstained predi
 Generate candidates using inference inputs only, for example an OCR engine, table parser, or fixed task ontology. Never use an evaluation reference answer or hidden rendering specification to insert the correct option. References may be used to annotate targets and score candidate coverage after candidate generation is frozen.
 
 Record both candidate recall and conditional selection accuracy. A null option helps represent missing evidence but does not repair low candidate recall. The examples in this repository are synthetic fixtures, not a KIE training corpus.
+
+## Multi-field documents
+
+Alternatively, each JSONL line may represent one document. Replace the top-level `question`, `task`, and `target` with 2–6 `fields`; keep `id`, `group_id`, image/context, and shared `candidates`.
+
+```json
+{"id":"doc-1","group_id":"source-1","candidates":[{"id":"a","text":"Total: 17.82 USD","value":"17.82 USD"},{"id":"b","text":"Payment: CARD","value":"CARD"},{"id":"none","text":"Not present","is_null":true}],"fields":[{"key":"total","question":"What is the total?","target":"a"},{"key":"payment_method","target":"b"}]}
+```
+
+Keys must be unique nonempty strings. `question` defaults to the key; per-field `target` is required only for training/scoring and never encoded. Use the same `vision-jev train`, `predict`, and `evaluate` commands. Add `--shuffle-fields --shuffle-candidates` to training. Evaluation counts fields, including missing fields, rather than documents. Keep all fields of a source document in one split.
+
+`pipeline(document)` returns a `fields` mapping keyed by the requested names. Each field includes the usual prediction plus `confidence` (selected candidate probability) and `confidence_kind: uncalibrated_candidate_probability`. Null selection and threshold abstention retain the raw selected probability; it is not a guarantee of answer correctness. `pipeline.batch` remains for independent single-question rows only.
+
+A two-document text-only smoke fixture is available in `examples/multifield-train.jsonl` and `examples/multifield-eval.jsonl`:
+
+```bash
+vision-jev train --data examples/multifield-train.jsonl \
+  --eval-data examples/multifield-eval.jsonl --base Qwen/Qwen3.5-0.8B \
+  --mode lora --shuffle-fields --shuffle-candidates --output checkpoints/multifield
+vision-jev predict --checkpoint checkpoints/multifield \
+  --data examples/multifield-eval.jsonl --output outputs/multifield.jsonl
+vision-jev evaluate --data examples/multifield-eval.jsonl --predictions outputs/multifield.jsonl
+```
+
+This fixture exercises the interface only; use independent annotated image documents for actual task training.

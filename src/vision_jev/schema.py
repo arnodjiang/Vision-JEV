@@ -10,6 +10,22 @@ QUERY_MARK = "<|fim_middle|>"
 def validate(record, require_target=False):
     if not isinstance(record, dict):
         raise ValueError("Record must be an object")
+    if "fields" in record:
+        fields = record["fields"]
+        if not isinstance(fields, list) or not 2 <= len(fields) <= 6:
+            raise ValueError("fields must contain 2–6 field requests")
+        keys = [f.get("key") if isinstance(f, dict) else None for f in fields]
+        if any(not isinstance(k, str) or not k.strip() for k in keys):
+            raise ValueError("Field keys must be nonempty strings")
+        if len(set(keys)) != len(keys):
+            raise ValueError("Field keys must be unique")
+        for field in fields:
+            single = {k: v for k, v in record.items() if k not in ("fields", "target")}
+            single.update(task="extract", question=field.get("question", field["key"]))
+            if "target" in field:
+                single["target"] = field["target"]
+            validate(single, require_target)
+        return record
     for key in ("id", "group_id", "question", "task", "candidates"):
         if key not in record:
             raise ValueError(f"Missing {key}")

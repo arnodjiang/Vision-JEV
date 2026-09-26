@@ -57,3 +57,9 @@ Generated checkpoints, images, predictions and local reports are excluded from G
 ## Unverified research outcomes
 
 Task-ready KIE training, held-out QA evaluation, candidate generation, learned localization, calibration, shared visual-prefix caching, and end-to-end quality–latency comparisons remain future work.
+
+## Shared-document multi-field update
+
+The multi-field implementation passes 24 tests with the local official processor assets enabled. Added checks cover two field readouts in one hybrid-backbone forward, backward gradients, field-level missing-prediction accounting, checkpoint restoration, one image grid per document, and target-label isolation. Tests use a tiny randomly initialized Qwen3.5 backbone, not trained task weights.
+
+An additional offline run using the previous 0.8B smoke adapter could not load its base weights because the required Hugging Face cache snapshot was unavailable. Consequently, this update does not claim a completed official-0.8B multi-field inference run, task quality, or measured latency improvement.

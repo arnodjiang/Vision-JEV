@@ -30,6 +30,6 @@ The result maps each requested key to `value`, `confidence`, `confidence_kind`, 
 
 Replace `ocr.json` with your OCR output in the same schema: local image path, pixel width/height, and spans with unique IDs, text, and pixel `xyxy` boxes. OCR recognition scores are not used as extraction confidence. The fixture parser is intentionally simple; production normalization and OCR quality need separate validation.
 
-Fields are processed as independent rows in one model batch. Image encoding is repeated across rows; this example does not demonstrate shared-prefix acceleration, calibrated verification, or end-to-end speedup. All fixture questions belong to the same source group and must stay in one data split.
+Fields are now processed in one document sequence with one image encoding and one backbone forward. Every field has its own readout position and shares the candidate head. This is parallel candidate extraction, not free-text MTP. Field order can affect predictions through causal context; no calibrated verification or measured end-to-end speedup is claimed. All fixture questions belong to the same source group and must stay in one data split.
 
 Rebuild the bundled assets with `python examples/ocr_receipt/build.py`.

@@ -17,13 +17,20 @@ class CandidateHead(nn.Module):
 
     def forward(self, hidden, candidate_positions, query_positions, candidate_mask):
         batch = torch.arange(hidden.shape[0], device=hidden.device)
-        q = hidden[batch, query_positions]
+        multi = query_positions.ndim == 2
+        positions = query_positions if multi else query_positions[:, None]
+        q = hidden[batch[:, None], positions]
         k = hidden[batch[:, None], candidate_positions.clamp_min(0)]
         scores = (
-            self.query(q.to(self.query.weight.dtype))[:, None]
-            * self.key(k.to(self.key.weight.dtype))
-        ).sum(-1) * self.scale
-        return scores.float().masked_fill(~candidate_mask, float("-inf"))
+            torch.einsum(
+                "bfd,bcd->bfc",
+                self.query(q.to(self.query.weight.dtype)),
+                self.key(k.to(self.key.weight.dtype)),
+            )
+            * self.scale
+        )
+        scores = scores.float().masked_fill(~candidate_mask[:, None, :], float("-inf"))
+        return scores if multi else scores[:, 0]
 
 
 class VisionJEV(nn.Module):
@@ -66,7 +73,9 @@ class VisionJEV(nn.Module):
         )
         result = {"logits": logits}
         if labels is not None:
-            result["loss"] = nn.functional.cross_entropy(logits, labels)
+            result["loss"] = nn.functional.cross_entropy(
+                logits.reshape(-1, logits.shape[-1]), labels.reshape(-1)
+            )
         return result
 
     def save(self, directory, processor, metadata=None):
